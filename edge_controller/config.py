@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     technitium_status: str = "Not configured"
 
     caddy_binary: str = "caddy"
-    caddy_admin_address: str = "http://caddy:2019"
+    caddy_admin_address: str = "caddy:2019"
     caddy_config_path: Path = Path("/etc/caddy/Caddyfile")
     caddy_routes_path: Path = Path("/etc/caddy/generated/routes.caddy")
     caddy_candidate_path: Path = Path("/etc/caddy/generated/routes.caddy.candidate")

@@ -58,7 +58,7 @@ services:
       DNS_WILDCARD: ${DNS_WILDCARD:-*.home.arpa}
       EDGE_IP: ${EDGE_IP:-192.168.2.10}
       TECHNITIUM_STATUS: ${TECHNITIUM_STATUS:-Not configured}
-      CADDY_ADMIN_ADDRESS: http://caddy:2019
+      CADDY_ADMIN_ADDRESS: caddy:2019
       CADDY_CONFIG_PATH: /etc/caddy/Caddyfile
       CADDY_ROUTES_PATH: /etc/caddy/generated/routes.caddy
       CADDY_CANDIDATE_PATH: /etc/caddy/generated/routes.caddy.candidate

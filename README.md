@@ -153,7 +153,7 @@ Apply 흐름은 다음과 같다.
 4. 기존 routes.caddy 백업
 5. candidate를 routes.caddy로 교체
 6. 전체 Caddyfile validate
-7. caddy reload --address http://caddy:2019 실행
+7. caddy reload --address caddy:2019 실행
 8. 실패 시 이전 routes.caddy로 rollback
 ```
 
