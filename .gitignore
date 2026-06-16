@@ -1,0 +1,15 @@
+.env
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+.serena/
+postgres/data/
+caddy/data/*
+caddy/config/*
+!caddy/data/.gitkeep
+!caddy/config/.gitkeep

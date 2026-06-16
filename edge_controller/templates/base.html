@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Edge Controller</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='app.css') }}">
+    <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
+</head>
+<body>
+    <header class="topbar">
+        <div class="topbar__brand">
+            <span class="brand-mark">EC</span>
+            <div>
+                <h1>Edge Controller</h1>
+                <span class="subtle">lab-edge</span>
+            </div>
+        </div>
+        <nav class="tabs" aria-label="Main">
+            <a class="tab{% if active_tab == 'proxy' %} tab--active{% endif %}" href="/proxy-routes">Proxy Routes</a>
+            <a class="tab{% if active_tab == 'dns' %} tab--active{% endif %}" href="/dns-records">DNS Records</a>
+        </nav>
+    </header>
+
+    <main class="layout">
+        <section class="statusbar" aria-label="Runtime status">
+            <div>
+                <span class="label">Status</span>
+                <strong class="status-pill{% if status.dirty %} status-pill--pending{% else %} status-pill--ok{% endif %}">
+                    {{ status.status }}
+                </strong>
+            </div>
+            <div>
+                <span class="label">Last Applied</span>
+                <strong>{{ status.last_applied_at.strftime('%Y-%m-%d %H:%M:%S') if status.last_applied_at else 'Never' }}</strong>
+            </div>
+            <div>
+                <span class="label">Desired Checksum</span>
+                <code>{{ status.desired_checksum[:12] }}</code>
+            </div>
+            <div class="statusbar__actions">
+                <form method="post" action="/config/validate" hx-post="/config/validate" hx-target="body">
+                    <button type="submit" class="button button--secondary">Validate</button>
+                </form>
+                <form method="post" action="/config/apply" hx-post="/config/apply" hx-target="body">
+                    <button type="submit" class="button button--primary">Apply</button>
+                </form>
+                {% if status.last_applied_revision_id %}
+                <form method="post" action="/config/rollback/{{ status.last_applied_revision_id }}" hx-post="/config/rollback/{{ status.last_applied_revision_id }}" hx-target="body">
+                    <button type="submit" class="button button--warning">Rollback</button>
+                </form>
+                {% else %}
+                <button class="button" disabled>Rollback</button>
+                {% endif %}
+            </div>
+        </section>
+
+        {% if message %}
+        <div class="notice notice--ok">{{ message }}</div>
+        {% endif %}
+        {% if error %}
+        <div class="notice notice--error">{{ error }}</div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

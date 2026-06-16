@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="panel">
+    <div class="section-title">
+        <h2>DNS Records</h2>
+        <span class="count">Wildcard</span>
+    </div>
+    <div class="dns-grid">
+        <div>
+            <span class="label">Zone</span>
+            <strong>{{ dns_zone }}</strong>
+        </div>
+        <div>
+            <span class="label">Mode</span>
+            <strong>Wildcard</strong>
+        </div>
+        <div>
+            <span class="label">Wildcard</span>
+            <strong>{{ dns_wildcard }} -> {{ edge_ip }}</strong>
+        </div>
+        <div>
+            <span class="label">Technitium</span>
+            <strong>{{ technitium_status }}</strong>
+        </div>
+    </div>
+</section>
+
+<section class="panel">
+    <div class="section-title">
+        <h2>Stored DNS Records</h2>
+        <span class="count">{{ records|length }}</span>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>FQDN</th>
+                    <th>Type</th>
+                    <th>Value</th>
+                    <th>TTL</th>
+                    <th>Enabled</th>
+                    <th>Sync</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in records %}
+                <tr>
+                    <td><code>{{ record.fqdn }}</code></td>
+                    <td>{{ record.record_type }}</td>
+                    <td>{{ record.value }}</td>
+                    <td>{{ record.ttl }}</td>
+                    <td>{{ "ON" if record.enabled else "OFF" }}</td>
+                    <td>{{ record.sync_status }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="empty">No stored DNS records</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,81 @@
+services:
+  technitium:
+    image: technitium/dns-server:latest
+    container_name: lab-edge-technitium
+    restart: unless-stopped
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "5380:5380/tcp"
+    volumes:
+      - ./technitium/config:/etc/dns
+    networks:
+      - lab-edge
+
+  caddy:
+    image: caddy:2
+    container_name: lab-edge-caddy
+    restart: unless-stopped
+    depends_on:
+      - edge-controller
+    ports:
+      - "80:80/tcp"
+      - "443:443/tcp"
+      - "443:443/udp"
+    volumes:
+      - ./caddy/conf/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy/conf/generated:/etc/caddy/generated
+      - ./caddy/data:/data
+      - ./caddy/config:/config
+    networks:
+      - lab-edge
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: lab-edge-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-edge_controller}
+      POSTGRES_USER: ${POSTGRES_USER:-edge}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-edge_password}
+    volumes:
+      - ./postgres/data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+      - lab-edge
+
+  edge-controller:
+    build: .
+    container_name: lab-edge-controller
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-edge}:${POSTGRES_PASSWORD:-edge_password}@postgres:5432/${POSTGRES_DB:-edge_controller}
+      DNS_ZONE: ${DNS_ZONE:-home.arpa}
+      DNS_WILDCARD: ${DNS_WILDCARD:-*.home.arpa}
+      EDGE_IP: ${EDGE_IP:-192.168.2.10}
+      TECHNITIUM_STATUS: ${TECHNITIUM_STATUS:-Not configured}
+      CADDY_ADMIN_ADDRESS: http://caddy:2019
+      CADDY_CONFIG_PATH: /etc/caddy/Caddyfile
+      CADDY_ROUTES_PATH: /etc/caddy/generated/routes.caddy
+      CADDY_CANDIDATE_PATH: /etc/caddy/generated/routes.caddy.candidate
+      CADDY_BACKUP_DIR: /app/caddy/backups
+      CADDY_RELOAD_ENABLED: ${CADDY_RELOAD_ENABLED:-true}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./caddy/conf/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy/conf/generated:/etc/caddy/generated
+      - ./caddy/conf/backups:/app/caddy/backups
+    expose:
+      - "8000"
+    networks:
+      - lab-edge
+
+networks:
+  lab-edge:
+    name: lab-edge

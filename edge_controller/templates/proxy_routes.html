@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="split">
+    <div class="panel panel--form">
+        <div class="section-title">
+            <h2>{{ "Edit Route" if edit_route else "Add Route" }}</h2>
+            {% if edit_route %}
+            <a class="button" href="/proxy-routes">Cancel</a>
+            {% endif %}
+        </div>
+
+        <form class="route-form" method="post" action="{{ '/proxy-routes/' ~ edit_route.id if edit_route else '/proxy-routes' }}">
+            <label>
+                <span>Name</span>
+                <input name="name" required maxlength="80" value="{{ edit_route.name if edit_route else '' }}" placeholder="heimdall">
+            </label>
+            <label>
+                <span>Domain</span>
+                <input name="domain" required maxlength="255" value="{{ edit_route.domain if edit_route else '' }}" placeholder="heimdall.home.arpa">
+            </label>
+            <div class="form-row">
+                <label>
+                    <span>Scheme</span>
+                    <select name="target_scheme">
+                        {% set scheme = edit_route.target_scheme if edit_route else 'http' %}
+                        <option value="http" {% if scheme == 'http' %}selected{% endif %}>http</option>
+                        <option value="https" {% if scheme == 'https' %}selected{% endif %}>https</option>
+                    </select>
+                </label>
+                <label>
+                    <span>Port</span>
+                    <input name="target_port" required type="number" min="1" max="65535" value="{{ edit_route.target_port if edit_route else '' }}" placeholder="8080">
+                </label>
+            </div>
+            <label>
+                <span>Target Host</span>
+                <input name="target_host" required maxlength="255" value="{{ edit_route.target_host if edit_route else '' }}" placeholder="192.168.2.117">
+            </label>
+            <div class="checks">
+                <label class="check">
+                    <input type="checkbox" name="tls_insecure_skip_verify" value="true" {% if edit_route and edit_route.tls_insecure_skip_verify %}checked{% endif %}>
+                    <span>TLS Skip Verify</span>
+                </label>
+                <label class="check">
+                    <input type="checkbox" name="enabled" value="true" {% if edit_route is none or edit_route.enabled %}checked{% endif %}>
+                    <span>Enabled</span>
+                </label>
+            </div>
+            <button type="submit" class="button button--primary">{{ "Save Changes" if edit_route else "Add Route" }}</button>
+        </form>
+    </div>
+
+    <div class="panel panel--wide">
+        <div class="section-title">
+            <h2>Proxy Routes</h2>
+            <span class="count">{{ routes|length }}</span>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Domain</th>
+                        <th>Target</th>
+                        <th>TLS</th>
+                        <th>Enabled</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for route in routes %}
+                    <tr>
+                        <td><code>{{ route.domain }}</code></td>
+                        <td>{{ route.target }}</td>
+                        <td>{{ "Skip" if route.tls_insecure_skip_verify else "-" }}</td>
+                        <td>
+                            <form method="post" action="/proxy-routes/{{ route.id }}/toggle" hx-post="/proxy-routes/{{ route.id }}/toggle" hx-target="body">
+                                <button type="submit" class="toggle{% if route.enabled %} toggle--on{% endif %}">{{ "ON" if route.enabled else "OFF" }}</button>
+                            </form>
+                        </td>
+                        <td>{{ "Pending" if status.dirty else "Applied" }}</td>
+                        <td class="actions">
+                            <a class="button button--small" href="/proxy-routes?edit_id={{ route.id }}">Edit</a>
+                            <form method="post" action="/proxy-routes/{{ route.id }}/delete" hx-post="/proxy-routes/{{ route.id }}/delete" hx-target="body">
+                                <button type="submit" class="button button--small button--danger">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="empty">No proxy routes</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<section class="panel">
+    <div class="section-title">
+        <h2>Config Revisions</h2>
+        <span class="count">{{ revisions|length }}</span>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Revision</th>
+                    <th>Status</th>
+                    <th>Checksum</th>
+                    <th>Created</th>
+                    <th>Applied</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for revision in revisions %}
+                <tr>
+                    <td>#{{ revision.revision_no }}</td>
+                    <td>{{ revision.status }}</td>
+                    <td><code>{{ revision.checksum[:12] }}</code></td>
+                    <td>{{ revision.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td>{{ revision.applied_at.strftime('%Y-%m-%d %H:%M:%S') if revision.applied_at else '-' }}</td>
+                    <td>
+                        <form method="post" action="/config/rollback/{{ revision.id }}" hx-post="/config/rollback/{{ revision.id }}" hx-target="body">
+                            <button type="submit" class="button button--small button--warning">Rollback</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="empty">No config revisions</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,9 @@
+{
+	admin 0.0.0.0:2019
+}
+
+http://edge.home.arpa {
+	reverse_proxy edge-controller:8000
+}
+
+import /etc/caddy/generated/routes.caddy
